@@ -1,0 +1,62 @@
+# Docker Compose file for setting up a local SonarQube instance for testing.
+#
+# This setup includes:
+# 1. The SonarQube Community Edition service.
+# 2. A PostgreSQL database service, which is the recommended database for SonarQube.
+# 3. Docker volumes to persist data for both SonarQube and the database.
+#    This ensures that your analysis data is not lost when you stop and start the containers.
+#
+# How to use this file:
+# 1. Save this content as 'docker-compose.yml' in a new directory on your local machine.
+# 2. Open a terminal or command prompt and navigate to that directory.
+# 3. Run the command: docker-compose up -d
+# 4. Wait for a few minutes for the services to start up completely.
+# 5. Open your web browser and go to http://localhost:9000
+# 6. Log in with the default credentials:
+#    - Username: admin
+#    - Password: admin
+#
+# To stop the services, run: docker-compose down
+
+version: "3.8"
+
+services:
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://db:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - db
+    networks:
+      - sonarnet
+
+  db:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - sonarnet
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql_data:
+
+networks:
+  sonarnet:
+    driver: bridge
